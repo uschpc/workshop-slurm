@@ -1,0 +1,23 @@
+body {
+  background-color: #e0e0e0;
+  padding: 10 10 10 10;
+}
+
+blockquote {
+  background-color: #e0e0e0;
+}
+
+code {white-space: pre;}
+
+div.slide {
+  z-index: 20;
+  margin: 1em;
+  padding: 1em;
+  border-width: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  line-height: 120%;
+  background-color: transparent;
+}
