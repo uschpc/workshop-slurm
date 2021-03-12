@@ -538,8 +538,8 @@ Submitted batch job 3353549
 
 $ squeue -u ttrojan
   JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-3355311      main   jl.job  ttrojan PD       0:00      1 (Dependency)
-3355310      main  jl2.job  ttrojan  R       0:32      1 b22-31
+3353549      main  jl2.job  ttrojan PD       0:00      1 (Dependency)
+3353548      main   jl.job  ttrojan  R       0:32      1 b22-31
 ```
 
 
