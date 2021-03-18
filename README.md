@@ -6,7 +6,7 @@ This workshop covers how to run and monitor jobs using the Slurm workload manage
 
 Slides: https://uschpc.github.io/workshop-slurm/
 
-### Additional resources:
+### Additional resources
 
 [Official Slurm documentation](https://slurm.schedmd.com/)  
 [CARC User Guide for Running Jobs](https://carc.usc.edu/user-information/user-guides/high-performance-computing/running-jobs)  
