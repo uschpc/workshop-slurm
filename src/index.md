@@ -1,7 +1,7 @@
 ---
 title: Slurm Job Management
 author: Derek Strong <br> dstrong[at]usc.edu <br> Research Computing Associate <br> CARC at USC <br>
-date: 2021-03-12
+date: 2021-03-23
 ---
 
 
@@ -200,11 +200,11 @@ julia script.jl
 
 | Partition | Maximum run time | Maximum concurrent CPUs | Maximum concurrent GPUs | Maximum number of jobs or job steps (running or pending) |
 |---|---|---|---|---|
-| main     |  48 hours   | 1,200 | 36  | 50,000 |
-| epyc-64  |  48 hours   | 1,200 | n/a | 50,000 |
-| oneweek  | 168 hours   | 208   | n/a | 50     |
-| largemem | 168 hours   | 128   | n/a | 10     |
-| debug    | 30  minutes | 48    | 4   | 5      |
+| main     |  48 hours   | 1,200 | 36  | 5,000 |
+| epyc-64  |  48 hours   | 1,200 | n/a | 5,000 |
+| oneweek  | 168 hours   | 208   | n/a | 50    |
+| largemem | 168 hours   | 120   | n/a | 10    |
+| debug    | 30  minutes | 48    | 4   | 5     |
 
 
 ## Environment variables for sbatch
