@@ -6,8 +6,8 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
-  <meta name="author" content="Derek Strong   dstrong[at]usc.edu   Research Computing Associate   CARC at USC  " />
-  <meta name="date" content="2021-03-23" />
+  <meta name="author" content="Center for Advanced Research Computing   University of Southern California" />
+  <meta name="date" content="2021-06-04" />
   <title>Slurm Job Management</title>
   <style type="text/css">
     code{white-space: pre-wrap;}
@@ -28,22 +28,35 @@
 <div class="slide titlepage">
   <h1 class="title">Slurm Job Management</h1>
   <p class="author">
-Derek Strong <br> dstrong[at]usc.edu <br> Research Computing Associate <br> CARC at USC <br>
+Center for Advanced Research Computing <br> University of Southern California
   </p>
-  <p class="date">2021-03-23</p>
+  <p class="date">2021-06-04</p>
+</div>
+<div id="outline" class="slide section level2">
+<h1>Outline</h1>
+<p>1 - Overview<br />
+2 - Cluster info<br />
+3 - Submitting jobs<br />
+4 - Monitoring jobs<br />
+5 - Other commands<br />
+6 - Job dependencies<br />
+7 - Job arrays</p>
+</div>
+<div id="overview" class="slide section level2">
+<h1>1 - Overview</h1>
 </div>
 <div id="what-is-slurm" class="slide section level2">
 <h1>What is Slurm?</h1>
 <ul>
-<li>Open-source cluster management and job scheduling system for Linux clusters</li>
+<li>Open-source management and job scheduling system for Linux computing clusters</li>
 <li>Three main functions:
 <ul>
-<li>allocates access to resources (compute nodes)</li>
-<li>provides a framework to run and monitor jobs on allocated nodes</li>
-<li>manages a job queue for competing resource requests</li>
+<li>Allocates access to resources (compute nodes)</li>
+<li>Provides a framework to run and monitor jobs on allocated nodes</li>
+<li>Manages a job queue for competing resource requests</li>
 </ul></li>
 <li>Specific configuration for CARC clusters</li>
-<li>Official documentation: <a href="https://slurm.schedmd.com/">https://slurm.schedmd.com/</a></li>
+<li>Official documentation: <a href="https://slurm.schedmd.com">https://slurm.schedmd.com</a></li>
 </ul>
 </div>
 <div id="overview-of-slurm-commands" class="slide section level2">
@@ -51,57 +64,89 @@ Derek Strong <br> dstrong[at]usc.edu <br> Research Computing Associate <br> CARC
 <table>
 <thead>
 <tr class="header">
+<th>Category</th>
 <th>Command</th>
 <th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
+<td>Cluster info</td>
 <td>sinfo</td>
 <td>Display compute partition and node information</td>
 </tr>
 <tr class="even">
+<td>Submitting jobs</td>
 <td>sbatch</td>
 <td>Submit a job script for remote execution</td>
 </tr>
 <tr class="odd">
+<td></td>
 <td>srun</td>
 <td>Launch parallel tasks (job steps) for MPI jobs</td>
 </tr>
 <tr class="even">
+<td></td>
 <td>salloc</td>
 <td>Allocate resources for an interactive job</td>
 </tr>
 <tr class="odd">
+<td></td>
 <td>squeue</td>
 <td>Display status of jobs and job steps</td>
 </tr>
 <tr class="even">
+<td></td>
 <td>sprio</td>
 <td>Display job priority information</td>
 </tr>
 <tr class="odd">
+<td></td>
 <td>scancel</td>
 <td>Cancel pending or running jobs</td>
 </tr>
 <tr class="even">
+<td>Monitoring jobs</td>
 <td>sstat</td>
 <td>Display status information for running jobs</td>
 </tr>
 <tr class="odd">
+<td></td>
 <td>sacct</td>
-<td>Display accounting information for past jobs</td>
+<td>Display accounting information for jobs</td>
 </tr>
 <tr class="even">
+<td></td>
 <td>seff</td>
 <td>Display job efficiency information for past jobs</td>
 </tr>
 <tr class="odd">
+<td>Other</td>
 <td>scontrol</td>
 <td>Display or modify Slurm configuration and state</td>
 </tr>
 </tbody>
 </table>
+</div>
+<div id="typical-batch-job-workflow" class="slide section level2">
+<h1>Typical batch job workflow</h1>
+<ol style="list-style-type: decimal">
+<li>Create job script</li>
+<li>Submit job script with <code>sbatch</code></li>
+<li>Check job status with <code>squeue</code></li>
+<li>When job completes, check log file</li>
+<li>If job failed, modify job and resubmit (back to step 1)
+<ul>
+<li>Check job information with <code>sacct</code> or <code>seff</code> if needed</li>
+</ul></li>
+<li>If job succeeded, check job information with <code>sacct</code> or <code>seff</code>
+<ul>
+<li>If possible, use less resources next time for similar job</li>
+</ul></li>
+</ol>
+</div>
+<div id="cluster-info" class="slide section level2">
+<h1>2 - Cluster info</h1>
 </div>
 <div id="sinfo" class="slide section level2">
 <h1>sinfo</h1>
@@ -131,7 +176,7 @@ main*        up 2-00:00:00      5 drain* d17-[40-44]
 <ul>
 <li>Can also use SINFO_FORMAT environment variable to set</li>
 <li><code>export SINFO_FORMAT=...</code></li>
-<li>add to <code>~/.bashrc</code> to automatically set when logging in</li>
+<li>Add to <code>~/.bashrc</code> to automatically set when logging in</li>
 </ul></li>
 <li><code>sinfo2</code> is alias for listing information by partition, node type, and node status</li>
 </ul>
@@ -191,11 +236,18 @@ main*        up 2-00:00:00      0    n/a
 oneweek      up 7-00:00:00     34   idle e01-[48,52,60,62],e02-[41-46,48-63,65-72]
 largemem     up 7-00:00:00      0    n/a</code></pre>
 </div>
+<div id="exercise-1" class="slide section level2">
+<h1>Exercise 1</h1>
+<p>Display info for the epyc-64 partition</p>
+</div>
 <div id="submitting-jobs" class="slide section level2">
-<h1>Submitting jobs</h1>
+<h1>3 - Submitting jobs</h1>
+</div>
+<div id="three-commands-for-submitting-jobs" class="slide section level2">
+<h1>Three commands for submitting jobs</h1>
 <ul>
 <li>For batch jobs, use <code>sbatch</code></li>
-<li>For parallel tasks (job steps) within batch jobs, use <code>srun</code></li>
+<li>For parallel (MPI) tasks (job steps) within batch jobs, use <code>srun</code></li>
 <li>For interactive jobs, use <code>salloc</code></li>
 </ul>
 </div>
@@ -203,14 +255,15 @@ largemem     up 7-00:00:00      0    n/a</code></pre>
 <h1>sbatch</h1>
 <ul>
 <li>Submit a job script for remote execution</li>
+<li>A job script is a special type of Bash script</li>
 <li><code>sbatch --help</code></li>
 <li><a href="https://slurm.schedmd.com/sbatch.html">https://slurm.schedmd.com/sbatch.html</a></li>
 </ul>
 <pre><code>$ sbatch jl.job
 Submitted batch job 3353548</code></pre>
 </div>
-<div id="example-job-script" class="slide section level2">
-<h1>Example job script</h1>
+<div id="example-job-script-for-multi-threaded-job" class="slide section level2">
+<h1>Example job script for multi-threaded job</h1>
 <pre><code>#!/bin/bash
 
 #SBATCH --nodes=1
@@ -224,7 +277,15 @@ module purge
 module load gcc/8.3.0
 module load julia/1.5.2
 
-julia script.jl</code></pre>
+julia --threads $SLURM_CPUS_PER_TASK script.jl</code></pre>
+<ul>
+<li>Generic structure:
+<ul>
+<li>Specify SBATCH options (resource requests)</li>
+<li>Load software and set up environment</li>
+<li>Run commands</li>
+</ul></li>
+</ul>
 </div>
 <div id="commonly-used-sbatch-options" class="slide section level2">
 <h1>Commonly used sbatch options</h1>
@@ -250,7 +311,7 @@ julia script.jl</code></pre>
 </tr>
 <tr class="even">
 <td><code>--mem=&lt;number&gt;</code></td>
-<td>Total memory (single node)</td>
+<td>Total memory (per node)</td>
 </tr>
 <tr class="odd">
 <td><code>--mem-per-cpu=&lt;number&gt;</code></td>
@@ -337,28 +398,69 @@ julia script.jl</code></pre>
 <ul>
 <li>Shell environment is transferred to job when submitted</li>
 <li>Use <code>module purge</code> to clear modules</li>
-<li>use <code>--mem=0</code> to request all available memory on a node</li>
-<li>Pack short-running jobs together as job steps</li>
+<li>Use <code>--mem=0</code> to request all available memory on a node</li>
+<li>For submitting lots of similar jobs, use job arrays</li>
+<li>For submitting lots of short-running jobs, pack them together in one job</li>
+</ul>
+</div>
+<div id="exercise-2" class="slide section level2">
+<h1>Exercise 2</h1>
+<p>Submit the following job script:</p>
+<pre><code>#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=1GB
+#SBATCH --time=0:10:00
+#SBATCH --account=&lt;account_id&gt;
+
+module purge
+
+echo &quot;Hello world&quot;
+sleep 280</code></pre>
+</div>
+<div id="example-job-script-for-gpu-job" class="slide section level2">
+<h1>Example job script for GPU job</h1>
+<pre><code>#!/bin/bash
+
+#SBATCH --gres=gpu:p100:1
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16GB
+#SBATCH --time=1:00:00
+#SBATCH --account=&lt;account_id&gt;
+
+module purge
+module load gcc/8.3.0
+module load cuda/10.1.243
+
+./program</code></pre>
+<ul>
+<li>Add option: <code>#SBATCH --gres=gpu:&lt;gpu_type&gt;:&lt;number&gt;</code></li>
+<li><a href="https://carc.usc.edu/user-information/user-guides/software-and-programming/using-gpus">CARC User Guide for Using GPUs</a></li>
 </ul>
 </div>
 <div id="job-output-files" class="slide section level2">
 <h1>Job output files</h1>
 <ul>
 <li>By default, output log files are named <code>slurm-&lt;jobid&gt;.out</code> and saved to the submit directory</li>
-<li>By default, any output and error messages are printed to the output file</li>
+<li>By default, both output and error messages are printed to the same output file</li>
 <li>Use <code>--output</code> and/or <code>--error</code> options to customize filenames or split output</li>
-<li>Filename patterns can be used (e.g., %x = job name → %x.out)</li>
+<li>Filename patterns can be used (e.g., %x = job name → <code>#SBATCH --output=%x.out</code>)</li>
 </ul>
 </div>
-<div id="current-job-limits" class="slide section level2">
-<h1>Current job limits</h1>
-<table>
+<div id="current-job-limits-on-discovery" class="slide section level2">
+<h1>Current job limits on Discovery</h1>
+<table style="width:100%;">
 <colgroup>
-<col width="20%" />
-<col width="20%" />
-<col width="20%" />
-<col width="20%" />
-<col width="20%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -366,7 +468,8 @@ julia script.jl</code></pre>
 <th>Maximum run time</th>
 <th>Maximum concurrent CPUs</th>
 <th>Maximum concurrent GPUs</th>
-<th>Maximum number of jobs or job steps (running or pending)</th>
+<th>Maximum number of jobs queued</th>
+<th>Maximum number of jobs running</th>
 </tr>
 </thead>
 <tbody>
@@ -376,6 +479,7 @@ julia script.jl</code></pre>
 <td>1,200</td>
 <td>36</td>
 <td>5,000</td>
+<td>500</td>
 </tr>
 <tr class="even">
 <td>epyc-64</td>
@@ -383,12 +487,14 @@ julia script.jl</code></pre>
 <td>1,200</td>
 <td>n/a</td>
 <td>5,000</td>
+<td>500</td>
 </tr>
 <tr class="odd">
 <td>oneweek</td>
 <td>168 hours</td>
 <td>208</td>
 <td>n/a</td>
+<td>50</td>
 <td>50</td>
 </tr>
 <tr class="even">
@@ -397,6 +503,7 @@ julia script.jl</code></pre>
 <td>120</td>
 <td>n/a</td>
 <td>10</td>
+<td>2</td>
 </tr>
 <tr class="odd">
 <td>debug</td>
@@ -404,9 +511,12 @@ julia script.jl</code></pre>
 <td>48</td>
 <td>4</td>
 <td>5</td>
+<td>5</td>
 </tr>
 </tbody>
 </table>
+<p><em>By default, Endeavour condo partitions will inherit the main partition limits but with a two-week maximum run time</em><br />
+<em>Custom limits can be requested for Endeavour condo partitions</em></p>
 </div>
 <div id="environment-variables-for-sbatch" class="slide section level2">
 <h1>Environment variables for sbatch</h1>
@@ -457,8 +567,8 @@ julia script.jl</code></pre>
 </tbody>
 </table>
 </div>
-<div id="variables-example-for-job-script" class="slide section level2">
-<h1>Variables example for job script</h1>
+<div id="example-job-script-with-slurm-variables" class="slide section level2">
+<h1>Example job script with Slurm variables</h1>
 <pre><code>#!/bin/bash
 
 #SBATCH --nodes=1
@@ -477,7 +587,7 @@ echo &quot;Nodelist: $SLURM_JOB_NODELIST&quot;
 
 cd $SLURM_SUBMIT_DIR/scripts
 
-julia script.jl</code></pre>
+julia --threads $SLURM_CPUS_PER_TASK script.jl</code></pre>
 </div>
 <div id="srun" class="slide section level2">
 <h1>srun</h1>
@@ -485,11 +595,11 @@ julia script.jl</code></pre>
 <li>Launch parallel tasks (job steps) for MPI jobs</li>
 <li><code>srun --help</code></li>
 <li><a href="https://slurm.schedmd.com/srun.html">https://slurm.schedmd.com/srun.html</a></li>
-<li><a href="https://carc.usc.edu/user-information/user-guides/high-performance-computing/mpi">CARC User Guide for MPI</a></li>
+<li><a href="https://carc.usc.edu/user-information/user-guides/software-and-programming/mpi">CARC User Guide for Using MPI</a></li>
 </ul>
 </div>
-<div id="mpi-example" class="slide section level2">
-<h1>MPI example</h1>
+<div id="example-job-script-for-mpi-job" class="slide section level2">
+<h1>Example job script for MPI job</h1>
 <pre><code>#!/bin/bash
 
 #SBATCH --nodes=6
@@ -535,6 +645,18 @@ salloc: Relinquishing job allocation 3353609
 
 ttrojan@discovery1:~$</code></pre>
 </div>
+<div id="exercise-3" class="slide section level2">
+<h1>Exercise 3</h1>
+<p>Request an interactive job on the debug partition</p>
+</div>
+<div id="additional-commands-related-to-job-submission" class="slide section level2">
+<h1>Additional commands related to job submission</h1>
+<ul>
+<li>To see the job queue, use <code>squeue</code></li>
+<li>To check job priority, use <code>sprio</code></li>
+<li>To cancel jobs, use <code>scancel</code></li>
+</ul>
+</div>
 <div id="squeue" class="slide section level2">
 <h1>squeue</h1>
 <ul>
@@ -544,10 +666,10 @@ ttrojan@discovery1:~$</code></pre>
 </ul>
 <pre><code>$ squeue -u ttrojan
   JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-3350450      main model1.j  ttrojan  R   19:49:52      1 d14-13
-3351281      main model2.j  ttrojan  R    9:42:42      1 d11-35
-3351276      main model3.j  ttrojan  R    9:45:12      1 d06-27
-3350444      main model4.j  ttrojan PD       0:00      1 (Resources)</code></pre>
+3351279      main model4.j  ttrojan PD       0:00      1 (Resources)
+3351155      main model1.j  ttrojan  R   19:49:52      1 d14-13
+3351270      main model2.j  ttrojan  R    9:42:42      1 d11-35
+3351276      main model3.j  ttrojan  R    9:45:12      1 d06-27</code></pre>
 </div>
 <div id="common-codes-for-job-state" class="slide section level2">
 <h1>Common codes for job state</h1>
@@ -615,12 +737,12 @@ ttrojan@discovery1:~$</code></pre>
 <ul>
 <li>Can also use SQUEUE_FORMAT environment variable to set</li>
 <li><code>export SQUEUE_FORMAT=...</code></li>
-<li>add to <code>~/.bashrc</code> to automatically set when logging in</li>
+<li>Add to <code>~/.bashrc</code> to automatically set when logging in</li>
 </ul></li>
 <li>Create shorter alias
 <ul>
 <li><code>alias myq="squeue -u $USER"</code></li>
-<li>add to <code>~/.bashrc</code> to automatically set when logging in</li>
+<li>Add to <code>~/.bashrc</code> to automatically set when logging in</li>
 </ul></li>
 </ul>
 </div>
@@ -630,9 +752,9 @@ ttrojan@discovery1:~$</code></pre>
 <li>Based on a fairshare algorithm and job age</li>
 <li>Fairshare values depend on a number of factors:
 <ul>
-<li>number of jobs submitted</li>
-<li>resources used</li>
-<li>project account activity</li>
+<li>Number of jobs submitted</li>
+<li>Resources used</li>
+<li>Project account activity</li>
 </ul></li>
 <li><a href="https://slurm.schedmd.com/fair_tree.html">https://slurm.schedmd.com/fair_tree.html</a></li>
 </ul>
@@ -665,6 +787,17 @@ $ sprio -j 3351270 -n
 
 scancel -u ttrojan</code></pre>
 </div>
+<div id="monitoring-jobs" class="slide section level2">
+<h1>4 - Monitoring jobs</h1>
+</div>
+<div id="three-commands-for-monitoring-jobs" class="slide section level2">
+<h1>Three commands for monitoring jobs</h1>
+<ul>
+<li>To view job status for currently running job, use <code>sstat</code></li>
+<li>To view information about current or past jobs, use <code>sacct</code></li>
+<li>To view efficiency information about past jobs, use <code>seff</code></li>
+</ul>
+</div>
 <div id="sstat" class="slide section level2">
 <h1>sstat</h1>
 <ul>
@@ -679,7 +812,7 @@ sstat -j &lt;jobid&gt; --format=JobID,MaxRSS,AveCPUFreq,MaxDiskRead,MaxDiskWrite
 <div id="sacct" class="slide section level2">
 <h1>sacct</h1>
 <ul>
-<li>Display accounting information for past jobs</li>
+<li>Display accounting information for jobs</li>
 <li><code>sacct --help</code></li>
 <li><a href="https://slurm.schedmd.com/sacct.html">https://slurm.schedmd.com/sacct.html</a></li>
 </ul>
@@ -710,8 +843,12 @@ sacct --format=JobID,MaxRSS,AveCPUFreq,MaxDiskRead,MaxDiskWrite,State,ExitCode</
 <li>0 → success, completed</li>
 <li>non-zero → failure</li>
 <li>Codes 1-127 indicate error in job</li>
-<li>Exit codes 129-255 indicate jobs terminated by Unix signals</li>
-<li><code>man signal</code></li>
+<li>Exit codes 129-255 indicate jobs terminated by Unix signals
+<ul>
+<li>For these, subtract 128 from the number and match to signal code</li>
+<li>Enter <code>kill -l</code> to list signal codes</li>
+<li>Enter <code>man signal</code> for more information</li>
+</ul></li>
 </ul>
 </div>
 <div id="seff" class="slide section level2">
@@ -732,6 +869,13 @@ Job Wall-clock time: 00:24:09
 Memory Utilized: 4.64 GB
 Memory Efficiency: 6.63% of 70.00 GB</code></pre>
 </div>
+<div id="exercise-4" class="slide section level2">
+<h1>Exercise 4</h1>
+<p>Check efficiency of previously submitted job</p>
+</div>
+<div id="other-commands" class="slide section level2">
+<h1>5 - Other commands</h1>
+</div>
 <div id="scontrol" class="slide section level2">
 <h1>scontrol</h1>
 <ul>
@@ -751,24 +895,35 @@ scontrol hold &lt;jobid&gt;
 scontrol release &lt;jobid&gt;</code></pre>
 </div>
 <div id="job-dependencies" class="slide section level2">
-<h1>Job dependencies</h1>
+<h1>6 - Job dependencies</h1>
+</div>
+<div id="why-use-a-job-dependency" class="slide section level2">
+<h1>Why use a job dependency?</h1>
 <ul>
 <li>If a job depends on another job</li>
 <li>Defer the start of a job until the specified dependencies have been satisfied</li>
-<li>Can be useful for workflows and splitting up long-running jobs</li>
-<li>Add <code>#SBATCH --dependency=&lt;type&gt;</code> to job script</li>
-<li>Or use <code>sbatch --dependency=&lt;type&gt; my.job</code></li>
+<li>Can be useful for workflows</li>
+<li>Also useful for checkpointing and splitting up long-running jobs</li>
 </ul>
 </div>
-<div id="common-job-dependency-types" class="slide section level2">
-<h1>Common job dependency types</h1>
-<p><code>--dependency=afterok:job_id[:jobid...]</code></p>
-<p>This job can begin execution after the specified jobs have successfully executed (ran to completion with an exit code of zero)</p>
-<p><code>--dependency=afternotok:job_id[:jobid...]</code></p>
-<p>This job can begin execution after the specified jobs have terminated in some failed state (non-zero exit code, node failure, timed out, etc)</p>
-<p><code>--dependency=after:job_id[[+time][:jobid[+time]...]]</code></p>
-<p>After the specified jobs start or are cancelled and ‘time’ in minutes from job start or cancellation happens, this job can begin execution. If no ‘time’ is given then there is no delay after start or cancellation</p>
-<p><code>--dependency=afterany:job_id[:jobid...]</code></p>
+<div id="setting-up-a-job-dependency" class="slide section level2">
+<h1>Setting up a job dependency</h1>
+<ul>
+<li>Add <code>#SBATCH --dependency=&lt;type&gt;</code> to job script</li>
+<li>Or use <code>sbatch --dependency=&lt;type&gt; my.job</code></li>
+<li>Different dependency types available</li>
+<li>Need job IDs (use <code>squeue</code> or <code>sacct</code>)</li>
+</ul>
+</div>
+<div id="commonly-used-job-dependency-types" class="slide section level2">
+<h1>Commonly used job dependency types</h1>
+<p><code>--dependency=afterok:&lt;job_id&gt;[:&lt;job_id&gt;...]</code></p>
+<p>This job can begin execution after the specified jobs have successfully executed (ran to completion with an exit code of 0)</p>
+<p><code>--dependency=afternotok:&lt;job_id&gt;[:&lt;job_id&gt;...]</code></p>
+<p>This job can begin execution after the specified jobs have terminated in some failed state (non-0 exit code, node failure, timed out, etc.)</p>
+<p><code>--dependency=after:&lt;job_id&gt;[[+time][:&lt;job_id&gt;[+time]...]]</code></p>
+<p>After the specified jobs start or are cancelled and time in minutes from job start or cancellation happens, this job can begin execution. If no time is given, then there is no delay after start or cancellation</p>
+<p><code>--dependency=afterany:&lt;job_id&gt;[:&lt;job_id&gt;...]</code></p>
 <p>This job can begin execution after the specified jobs have terminated</p>
 </div>
 <div id="job-dependency-example" class="slide section level2">
@@ -785,13 +940,27 @@ $ squeue -u ttrojan
 3353548      main   jl.job  ttrojan  R       0:32      1 b22-31</code></pre>
 </div>
 <div id="job-arrays" class="slide section level2">
-<h1>Job arrays</h1>
+<h1>7 - Job arrays</h1>
+</div>
+<div id="why-use-a-job-array" class="slide section level2">
+<h1>Why use a job array?</h1>
 <ul>
 <li>For submitting and managing collections of similar jobs quickly and easily</li>
+<li>Some examples:
+<ul>
+<li>Varying simulation or model parameters</li>
+<li>Running the same statistical models on different datasets</li>
+</ul></li>
 <li><a href="https://slurm.schedmd.com/job_array.html">https://slurm.schedmd.com/job_array.html</a></li>
+</ul>
+</div>
+<div id="setting-up-a-job-array" class="slide section level2">
+<h1>Setting up a job array</h1>
+<ul>
 <li>Add <code>#SBATCH --array=&lt;index&gt;</code> option to job script</li>
 <li>Each job task will use the same resources requested</li>
-<li>Modify job or application script to use index</li>
+<li>Modify job or application script to use array index</li>
+<li>Multiple methods are possible</li>
 </ul>
 </div>
 <div id="job-array-example" class="slide section level2">
@@ -844,9 +1013,24 @@ $ squeue -u ttrojan
 </div>
 <div id="additional-resources" class="slide section level2">
 <h1>Additional resources</h1>
-<p><a href="https://slurm.schedmd.com/">Official Slurm documentation</a><br />
-<a href="https://carc.usc.edu/user-information/user-guides/high-performance-computing/running-jobs">CARC User Guide for Running Jobs</a><br />
-<a href="https://carc.usc.edu/user-information/user-guides/high-performance-computing/slurm-templates">CARC Slurm Job Script Templates</a></p>
+<ul>
+<li><a href="https://slurm.schedmd.com/">Official Slurm documentation</a></li>
+<li><a href="https://carc.usc.edu/user-information/user-guides/hpc-basics/running-jobs">CARC User Guide for Running Jobs</a></li>
+<li><a href="https://carc.usc.edu/user-information/user-guides/hpc-basics/slurm-templates">CARC Slurm Job Script Templates</a></li>
+<li>Video learning: <a href="https://carc.usc.edu/education-and-outreach/video-learning/submitting-jobs">Submitting jobs</a></li>
+</ul>
+</div>
+<div id="getting-help" class="slide section level2">
+<h1>Getting help</h1>
+<ul>
+<li><a href="https://carc.usc.edu/user-information/ticket-submission">Submit a support ticket</a></li>
+<li><a href="https://hpc-discourse.usc.edu/">User Forum</a></li>
+<li>Office Hours
+<ul>
+<li>Every Tuesday 2:30-5pm (currently via Zoom)</li>
+<li>Register <a href="https://carc.usc.edu/news-and-events/events">here</a></li>
+</ul></li>
+</ul>
 </div>
 </body>
 </html>

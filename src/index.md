@@ -1,36 +1,65 @@
 ---
 title: Slurm Job Management
-author: Derek Strong <br> dstrong[at]usc.edu <br> Research Computing Associate <br> CARC at USC <br>
-date: 2021-03-23
+author: Center for Advanced Research Computing <br> University of Southern California
+date: 2021-06-04
 ---
+
+
+## Outline
+
+1 - Overview  
+2 - Cluster info  
+3 - Submitting jobs  
+4 - Monitoring jobs  
+5 - Other commands  
+6 - Job dependencies  
+7 - Job arrays
+
+
+## 1 - Overview
 
 
 ## What is Slurm?
 
-- Open-source cluster management and job scheduling system for Linux clusters
+- Open-source management and job scheduling system for Linux computing clusters
 - Three main functions:
-  - allocates access to resources (compute nodes)
-  - provides a framework to run and monitor jobs on allocated nodes
-  - manages a job queue for competing resource requests
+  - Allocates access to resources (compute nodes)
+  - Provides a framework to run and monitor jobs on allocated nodes
+  - Manages a job queue for competing resource requests
 - Specific configuration for CARC clusters
-- Official documentation: [https://slurm.schedmd.com/](https://slurm.schedmd.com/)
+- Official documentation: [https://slurm.schedmd.com](https://slurm.schedmd.com)
 
 
 ## Overview of Slurm commands
 
-| Command | Purpose |
-|---|---|
-| sinfo    | Display compute partition and node information |
-| sbatch   | Submit a job script for remote execution |
-| srun     | Launch parallel tasks (job steps) for MPI jobs |
-| salloc   | Allocate resources for an interactive job |
-| squeue   | Display status of jobs and job steps |
-| sprio    | Display job priority information |
-| scancel  | Cancel pending or running jobs |
-| sstat    | Display status information for running jobs |
-| sacct    | Display accounting information for past jobs |
-| seff     | Display job efficiency information for past jobs |
-| scontrol | Display or modify Slurm configuration and state |
+| Category | Command | Purpose |
+|---|---|---|
+| Cluster info    | sinfo    | Display compute partition and node information |
+| Submitting jobs | sbatch   | Submit a job script for remote execution |
+|                 | srun     | Launch parallel tasks (job steps) for MPI jobs |
+|                 | salloc   | Allocate resources for an interactive job |
+|                 | squeue   | Display status of jobs and job steps |
+|                 | sprio    | Display job priority information |
+|                 | scancel  | Cancel pending or running jobs |
+| Monitoring jobs | sstat    | Display status information for running jobs |
+|                 | sacct    | Display accounting information for jobs |
+|                 | seff     | Display job efficiency information for past jobs |
+| Other           | scontrol | Display or modify Slurm configuration and state |
+
+
+## Typical batch job workflow
+
+1. Create job script
+2. Submit job script with `sbatch`
+3. Check job status with `squeue`
+4. When job completes, check log file
+5. If job failed, modify job and resubmit (back to step 1)
+    - Check job information with `sacct` or `seff` if needed
+6. If job succeeded, check job information with `sacct` or `seff`
+    - If possible, use less resources next time for similar job
+
+
+## 2 - Cluster info
 
 
 ## sinfo
@@ -59,7 +88,7 @@ main*        up 2-00:00:00      5 drain* d17-[40-44]
 - Many formatting options with `--format` or `--Format`
   - Can also use SINFO_FORMAT environment variable to set
   - `export SINFO_FORMAT=...`
-  - add to `~/.bashrc` to automatically set when logging in
+  - Add to `~/.bashrc` to automatically set when logging in
 - `sinfo2` is alias for listing information by partition, node type, and node status
 
 
@@ -109,16 +138,25 @@ largemem     up 7-00:00:00      0    n/a
 ```
 
 
-## Submitting jobs
+## Exercise 1
+
+Display info for the epyc-64 partition
+
+
+## 3 - Submitting jobs
+
+
+## Three commands for submitting jobs
 
 - For batch jobs, use `sbatch`
-- For parallel tasks (job steps) within batch jobs, use `srun`
+- For parallel (MPI) tasks (job steps) within batch jobs, use `srun`
 - For interactive jobs, use `salloc`
 
 
 ## sbatch
 
 - Submit a job script for remote execution
+- A job script is a special type of Bash script
 - `sbatch --help`
 - [https://slurm.schedmd.com/sbatch.html](https://slurm.schedmd.com/sbatch.html)
 
@@ -128,7 +166,7 @@ Submitted batch job 3353548
 ```
 
 
-## Example job script
+## Example job script for multi-threaded job
 
 ```
 #!/bin/bash
@@ -144,8 +182,13 @@ module purge
 module load gcc/8.3.0
 module load julia/1.5.2
 
-julia script.jl
+julia --threads $SLURM_CPUS_PER_TASK script.jl
 ```
+
+- Generic structure:
+  - Specify SBATCH options (resource requests)
+  - Load software and set up environment
+  - Run commands
 
 
 ## Commonly used sbatch options
@@ -155,7 +198,7 @@ julia script.jl
 | `--nodes=<number>`               | Number of nodes to use |
 | `--ntasks=<number>`              | Number of processes to run |
 | `--cpus-per-task=<number>`       | Number of cores per task |
-| `--mem=<number>`                 | Total memory (single node) |
+| `--mem=<number>`                 | Total memory (per node) |
 | `--mem-per-cpu=<number>`         | Memory per processor core |
 | `--constraint=<attribute>`       | Node property to request (e.g., `xeon-4116`) |
 | `--partition=<partition_name>`   | Request nodes on specified partition |
@@ -184,27 +227,75 @@ julia script.jl
 
 - Shell environment is transferred to job when submitted
 - Use `module purge` to clear modules
-- use `--mem=0` to request all available memory on a node
-- Pack short-running jobs together as job steps
+- Use `--mem=0` to request all available memory on a node
+- For submitting lots of similar jobs, use job arrays
+- For submitting lots of short-running jobs, pack them together in one job
+
+
+## Exercise 2
+
+Submit the following job script:
+
+```
+#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=1GB
+#SBATCH --time=0:10:00
+#SBATCH --account=<account_id>
+
+module purge
+
+echo "Hello world"
+sleep 280
+```
+
+## Example job script for GPU job
+
+```
+#!/bin/bash
+
+#SBATCH --gres=gpu:p100:1
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16GB
+#SBATCH --time=1:00:00
+#SBATCH --account=<account_id>
+
+module purge
+module load gcc/8.3.0
+module load cuda/10.1.243
+
+./program
+```
+
+- Add option: `#SBATCH --gres=gpu:<gpu_type>:<number>`
+- [CARC User Guide for Using GPUs](https://carc.usc.edu/user-information/user-guides/software-and-programming/using-gpus)
 
 
 ## Job output files
 
 - By default, output log files are named `slurm-<jobid>.out` and saved to the submit directory
-- By default, any output and error messages are printed to the output file
+- By default, both output and error messages are printed to the same output file
 - Use `--output` and/or `--error` options to customize filenames or split output
-- Filename patterns can be used (e.g., %x = job name &rarr; %x.out)
+- Filename patterns can be used (e.g., %x = job name &rarr; `#SBATCH --output=%x.out`)
 
 
-## Current job limits
+## Current job limits on Discovery
 
-| Partition | Maximum run time | Maximum concurrent CPUs | Maximum concurrent GPUs | Maximum number of jobs or job steps (running or pending) |
-|---|---|---|---|---|
-| main     |  48 hours   | 1,200 | 36  | 5,000 |
-| epyc-64  |  48 hours   | 1,200 | n/a | 5,000 |
-| oneweek  | 168 hours   | 208   | n/a | 50    |
-| largemem | 168 hours   | 120   | n/a | 10    |
-| debug    | 30  minutes | 48    | 4   | 5     |
+| Partition | Maximum run time | Maximum concurrent CPUs | Maximum concurrent GPUs | Maximum number of jobs queued | Maximum number of jobs running |
+|---|---|---|---|---|---|
+| main     |  48 hours   | 1,200 | 36  | 5,000 | 500 |
+| epyc-64  |  48 hours   | 1,200 | n/a | 5,000 | 500 |
+| oneweek  | 168 hours   | 208   | n/a | 50    | 50  |
+| largemem | 168 hours   | 120   | n/a | 10    | 2   |
+| debug    | 30  minutes | 48    | 4   | 5     | 5   |
+
+*By default, Endeavour condo partitions will inherit the main partition limits but with a two-week maximum run time*  
+*Custom limits can be requested for Endeavour condo partitions*
 
 
 ## Environment variables for sbatch
@@ -223,7 +314,7 @@ julia script.jl
 | SLURM_ARRAY_TASK_ID  | Job array ID (index) number |
 
 
-## Variables example for job script
+## Example job script with Slurm variables
 
 ```
 #!/bin/bash
@@ -244,7 +335,7 @@ echo "Nodelist: $SLURM_JOB_NODELIST"
 
 cd $SLURM_SUBMIT_DIR/scripts
 
-julia script.jl
+julia --threads $SLURM_CPUS_PER_TASK script.jl
 ```
 
 
@@ -253,10 +344,10 @@ julia script.jl
 - Launch parallel tasks (job steps) for MPI jobs
 - `srun --help`
 - [https://slurm.schedmd.com/srun.html](https://slurm.schedmd.com/srun.html)
-- [CARC User Guide for MPI](https://carc.usc.edu/user-information/user-guides/high-performance-computing/mpi)
+- [CARC User Guide for Using MPI](https://carc.usc.edu/user-information/user-guides/software-and-programming/mpi)
 
 
-## MPI example
+## Example job script for MPI job
 
 ```
 #!/bin/bash
@@ -308,6 +399,18 @@ ttrojan@discovery1:~$
 ```
 
 
+## Exercise 3
+
+Request an interactive job on the debug partition
+
+
+## Additional commands related to job submission
+
+- To see the job queue, use `squeue`
+- To check job priority, use `sprio`
+- To cancel jobs, use `scancel`
+
+
 ## squeue
 
 - Display status of jobs and job steps
@@ -317,10 +420,10 @@ ttrojan@discovery1:~$
 ```
 $ squeue -u ttrojan
   JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-3350450      main model1.j  ttrojan  R   19:49:52      1 d14-13
-3351281      main model2.j  ttrojan  R    9:42:42      1 d11-35
+3351279      main model4.j  ttrojan PD       0:00      1 (Resources)
+3351155      main model1.j  ttrojan  R   19:49:52      1 d14-13
+3351270      main model2.j  ttrojan  R    9:42:42      1 d11-35
 3351276      main model3.j  ttrojan  R    9:45:12      1 d06-27
-3350444      main model4.j  ttrojan PD       0:00      1 (Resources)
 ```
 
 
@@ -362,19 +465,19 @@ $ squeue -u ttrojan
 - Many formatting options with `--format` or `--Format`
   - Can also use SQUEUE_FORMAT environment variable to set
   - `export SQUEUE_FORMAT=...`
-  - add to `~/.bashrc` to automatically set when logging in
+  - Add to `~/.bashrc` to automatically set when logging in
 - Create shorter alias
   - `alias myq="squeue -u $USER"`
-  - add to `~/.bashrc` to automatically set when logging in
+  - Add to `~/.bashrc` to automatically set when logging in
 
 
 ## Job priorities
 
 - Based on a fairshare algorithm and job age
 - Fairshare values depend on a number of factors:
-  - number of jobs submitted
-  - resources used
-  - project account activity
+  - Number of jobs submitted
+  - Resources used
+  - Project account activity
 - [https://slurm.schedmd.com/fair_tree.html](https://slurm.schedmd.com/fair_tree.html)
 
 
@@ -410,6 +513,17 @@ scancel -u ttrojan
 ```
 
 
+## 4 - Monitoring jobs
+
+
+
+## Three commands for monitoring jobs
+
+- To view job status for currently running job, use `sstat`
+- To view information about current or past jobs, use `sacct`
+- To view efficiency information about past jobs, use `seff`
+
+
 ## sstat
 
 - Display status information for running jobs
@@ -425,7 +539,7 @@ sstat -j <jobid> --format=JobID,MaxRSS,AveCPUFreq,MaxDiskRead,MaxDiskWrite
 
 ## sacct
 
-- Display accounting information for past jobs
+- Display accounting information for jobs
 - `sacct --help`
 - [https://slurm.schedmd.com/sacct.html](https://slurm.schedmd.com/sacct.html)
 
@@ -456,7 +570,9 @@ sacct --format=JobID,MaxRSS,AveCPUFreq,MaxDiskRead,MaxDiskWrite,State,ExitCode
 - non-zero &rarr; failure
 - Codes 1-127 indicate error in job
 - Exit codes 129-255 indicate jobs terminated by Unix signals
-- `man signal`
+  - For these, subtract 128 from the number and match to signal code
+  - Enter `kill -l` to list signal codes
+  - Enter `man signal` for more information
 
 
 ## seff
@@ -479,6 +595,14 @@ Memory Efficiency: 6.63% of 70.00 GB
 ```
 
 
+## Exercise 4
+
+Check efficiency of previously submitted job
+
+
+## 5 - Other commands
+
+
 ## scontrol
 
 - Display or modify Slurm configuration and state
@@ -499,30 +623,40 @@ scontrol release <jobid>
 ```
 
 
-## Job dependencies
+## 6 - Job dependencies
+
+
+## Why use a job dependency?
 
 - If a job depends on another job
 - Defer the start of a job until the specified dependencies have been satisfied
-- Can be useful for workflows and splitting up long-running jobs
+- Can be useful for workflows
+- Also useful for checkpointing and splitting up long-running jobs
+
+
+## Setting up a job dependency
+
 - Add `#SBATCH --dependency=<type>` to job script
 - Or use `sbatch --dependency=<type> my.job`
+- Different dependency types available
+- Need job IDs (use `squeue` or `sacct`)
 
 
-## Common job dependency types
+## Commonly used job dependency types
 
-`--dependency=afterok:job_id[:jobid...]`
+`--dependency=afterok:<job_id>[:<job_id>...]`
 
-This job can begin execution after the specified jobs have successfully executed (ran to completion with an exit code of zero)
+This job can begin execution after the specified jobs have successfully executed (ran to completion with an exit code of 0)
 
-`--dependency=afternotok:job_id[:jobid...]`
+`--dependency=afternotok:<job_id>[:<job_id>...]`
 
-This job can begin execution after the specified jobs have terminated in some failed state (non-zero exit code, node failure, timed out, etc)
+This job can begin execution after the specified jobs have terminated in some failed state (non-0 exit code, node failure, timed out, etc.)
 
-`--dependency=after:job_id[[+time][:jobid[+time]...]]`
+`--dependency=after:<job_id>[[+time][:<job_id>[+time]...]]`
 
-After the specified jobs start or are cancelled and 'time' in minutes from job start or cancellation happens, this job can begin execution. If no 'time' is given then there is no delay after start or cancellation
+After the specified jobs start or are cancelled and time in minutes from job start or cancellation happens, this job can begin execution. If no time is given, then there is no delay after start or cancellation
 
-`--dependency=afterany:job_id[:jobid...]`
+`--dependency=afterany:<job_id>[:<job_id>...]`
 
 This job can begin execution after the specified jobs have terminated
 
@@ -543,13 +677,24 @@ $ squeue -u ttrojan
 ```
 
 
-## Job arrays
+## 7 - Job arrays
+
+
+## Why use a job array?
 
 - For submitting and managing collections of similar jobs quickly and easily
+- Some examples:
+  - Varying simulation or model parameters
+  - Running the same statistical models on different datasets
 - [https://slurm.schedmd.com/job_array.html](https://slurm.schedmd.com/job_array.html)
+
+
+## Setting up a job array
+
 - Add `#SBATCH --array=<index>` option to job script
 - Each job task will use the same resources requested
-- Modify job or application script to use index
+- Modify job or application script to use array index
+- Multiple methods are possible
 
 
 ## Job array example
@@ -611,6 +756,16 @@ $ squeue -u ttrojan
 
 ## Additional resources
 
-[Official Slurm documentation](https://slurm.schedmd.com/)  
-[CARC User Guide for Running Jobs](https://carc.usc.edu/user-information/user-guides/high-performance-computing/running-jobs)  
-[CARC Slurm Job Script Templates](https://carc.usc.edu/user-information/user-guides/high-performance-computing/slurm-templates)
+- [Official Slurm documentation](https://slurm.schedmd.com/)
+- [CARC User Guide for Running Jobs](https://carc.usc.edu/user-information/user-guides/hpc-basics/running-jobs)
+- [CARC Slurm Job Script Templates](https://carc.usc.edu/user-information/user-guides/hpc-basics/slurm-templates)
+- Video learning: [Submitting jobs](https://carc.usc.edu/education-and-outreach/video-learning/submitting-jobs)
+
+
+## Getting help
+
+- [Submit a support ticket](https://carc.usc.edu/user-information/ticket-submission)
+- [User Forum](https://hpc-discourse.usc.edu/)
+- Office Hours
+  - Every Tuesday 2:30-5pm (currently via Zoom)
+  - Register [here](https://carc.usc.edu/news-and-events/events)

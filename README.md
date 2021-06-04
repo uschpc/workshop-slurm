@@ -2,12 +2,16 @@
 
 Workshop materials for *Slurm Job Management*.
 
-This workshop covers how to run and monitor jobs using the Slurm workload manager and job scheduler, including topics like requesting resources, evaluating resource use, running MPI jobs and job arrays, and setting up job dependencies.
+An overview of job submission and monitoring using the Slurm workload manager and job scheduler. Topics include resource requests, resource use evaluation, job dependencies, and job arrays.
 
 Slides: https://uschpc.github.io/workshop-slurm/
 
 ### Additional resources
 
 [Official Slurm documentation](https://slurm.schedmd.com/)  
-[CARC User Guide for Running Jobs](https://carc.usc.edu/user-information/user-guides/high-performance-computing/running-jobs)  
-[CARC Slurm Job Script Templates](https://carc.usc.edu/user-information/user-guides/high-performance-computing/slurm-templates)
+[CARC User Guide for Running Jobs](https://carc.usc.edu/user-information/user-guides/hpc-basics/running-jobs)  
+[CARC Slurm Job Script Templates](https://carc.usc.edu/user-information/user-guides/hpc-basics/slurm-templates)
+
+Video learning:
+
+[Submitting jobs](https://carc.usc.edu/education-and-outreach/video-learning/submitting-jobs)
