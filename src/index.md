@@ -1,22 +1,22 @@
 ---
 title: Slurm Job Management
 author: Center for Advanced Research Computing <br> University of Southern California
-date: 2021-06-04
+date: 2021-06-08
 ---
 
 
 ## Outline
 
-1 - Overview  
-2 - Cluster info  
-3 - Submitting jobs  
-4 - Monitoring jobs  
-5 - Other commands  
-6 - Job dependencies  
-7 - Job arrays
+1 --- Overview  
+2 --- Cluster info  
+3 --- Submitting jobs  
+4 --- Monitoring jobs  
+5 --- Other commands  
+6 --- Job dependencies  
+7 --- Job arrays
 
 
-## 1 - Overview
+## 1 --- Overview
 
 
 ## What is Slurm?
@@ -59,7 +59,7 @@ date: 2021-06-04
     - If possible, use less resources next time for similar job
 
 
-## 2 - Cluster info
+## 2 --- Cluster info
 
 
 ## sinfo
@@ -143,7 +143,7 @@ largemem     up 7-00:00:00      0    n/a
 Display info for the epyc-64 partition
 
 
-## 3 - Submitting jobs
+## 3 --- Submitting jobs
 
 
 ## Three commands for submitting jobs
@@ -251,6 +251,7 @@ module purge
 echo "Hello world"
 sleep 280
 ```
+
 
 ## Example job script for GPU job
 
@@ -513,8 +514,7 @@ scancel -u ttrojan
 ```
 
 
-## 4 - Monitoring jobs
-
+## 4 --- Monitoring jobs
 
 
 ## Three commands for monitoring jobs
@@ -564,12 +564,16 @@ sacct --format=JobID,MaxRSS,AveCPUFreq,MaxDiskRead,MaxDiskWrite,State,ExitCode
 
 ## Job exit codes
 
-- Exit status, 0-255
-- [https://slurm.schedmd.com/job_exit_code.html](https://slurm.schedmd.com/job_exit_code.html)
-- 0 &rarr; success, completed
+- 0 &rarr; success
 - non-zero &rarr; failure
-- Codes 1-127 indicate error in job
-- Exit codes 129-255 indicate jobs terminated by Unix signals
+- Exit code 1 indicates a general failure
+- Exit code 2 indicates incorrect use of shell builtins
+- Exit codes 3-124 indicate some error in job (check software exit codes)
+- Exit code 125 indicates out of memory
+- Exit code 126 indicates command cannot execute
+- Exit code 127 indicates command not found
+- Exit code 128 indicates invalid argument to exit
+- Exit codes 129-255 indicate jobs terminated by Linux signals
   - For these, subtract 128 from the number and match to signal code
   - Enter `kill -l` to list signal codes
   - Enter `man signal` for more information
@@ -600,7 +604,7 @@ Memory Efficiency: 6.63% of 70.00 GB
 Check efficiency of previously submitted job
 
 
-## 5 - Other commands
+## 5 --- Other commands
 
 
 ## scontrol
@@ -623,7 +627,7 @@ scontrol release <jobid>
 ```
 
 
-## 6 - Job dependencies
+## 6 --- Job dependencies
 
 
 ## Why use a job dependency?
@@ -677,7 +681,7 @@ $ squeue -u ttrojan
 ```
 
 
-## 7 - Job arrays
+## 7 --- Job arrays
 
 
 ## Why use a job array?

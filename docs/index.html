@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Center for Advanced Research Computing   University of Southern California" />
-  <meta name="date" content="2021-06-04" />
+  <meta name="date" content="2021-06-08" />
   <title>Slurm Job Management</title>
   <style type="text/css">
     code{white-space: pre-wrap;}
@@ -30,20 +30,20 @@
   <p class="author">
 Center for Advanced Research Computing <br> University of Southern California
   </p>
-  <p class="date">2021-06-04</p>
+  <p class="date">2021-06-08</p>
 </div>
 <div id="outline" class="slide section level2">
 <h1>Outline</h1>
-<p>1 - Overview<br />
-2 - Cluster info<br />
-3 - Submitting jobs<br />
-4 - Monitoring jobs<br />
-5 - Other commands<br />
-6 - Job dependencies<br />
-7 - Job arrays</p>
+<p>1 — Overview<br />
+2 — Cluster info<br />
+3 — Submitting jobs<br />
+4 — Monitoring jobs<br />
+5 — Other commands<br />
+6 — Job dependencies<br />
+7 — Job arrays</p>
 </div>
 <div id="overview" class="slide section level2">
-<h1>1 - Overview</h1>
+<h1>1 — Overview</h1>
 </div>
 <div id="what-is-slurm" class="slide section level2">
 <h1>What is Slurm?</h1>
@@ -146,7 +146,7 @@ Center for Advanced Research Computing <br> University of Southern California
 </ol>
 </div>
 <div id="cluster-info" class="slide section level2">
-<h1>2 - Cluster info</h1>
+<h1>2 — Cluster info</h1>
 </div>
 <div id="sinfo" class="slide section level2">
 <h1>sinfo</h1>
@@ -241,7 +241,7 @@ largemem     up 7-00:00:00      0    n/a</code></pre>
 <p>Display info for the epyc-64 partition</p>
 </div>
 <div id="submitting-jobs" class="slide section level2">
-<h1>3 - Submitting jobs</h1>
+<h1>3 — Submitting jobs</h1>
 </div>
 <div id="three-commands-for-submitting-jobs" class="slide section level2">
 <h1>Three commands for submitting jobs</h1>
@@ -788,7 +788,7 @@ $ sprio -j 3351270 -n
 scancel -u ttrojan</code></pre>
 </div>
 <div id="monitoring-jobs" class="slide section level2">
-<h1>4 - Monitoring jobs</h1>
+<h1>4 — Monitoring jobs</h1>
 </div>
 <div id="three-commands-for-monitoring-jobs" class="slide section level2">
 <h1>Three commands for monitoring jobs</h1>
@@ -838,12 +838,16 @@ sacct --format=JobID,MaxRSS,AveCPUFreq,MaxDiskRead,MaxDiskWrite,State,ExitCode</
 <div id="job-exit-codes" class="slide section level2">
 <h1>Job exit codes</h1>
 <ul>
-<li>Exit status, 0-255</li>
-<li><a href="https://slurm.schedmd.com/job_exit_code.html">https://slurm.schedmd.com/job_exit_code.html</a></li>
-<li>0 → success, completed</li>
+<li>0 → success</li>
 <li>non-zero → failure</li>
-<li>Codes 1-127 indicate error in job</li>
-<li>Exit codes 129-255 indicate jobs terminated by Unix signals
+<li>Exit code 1 indicates a general failure</li>
+<li>Exit code 2 indicates incorrect use of shell builtins</li>
+<li>Exit codes 3-124 indicate some error in job (check software exit codes)</li>
+<li>Exit code 125 indicates out of memory</li>
+<li>Exit code 126 indicates command cannot execute</li>
+<li>Exit code 127 indicates command not found</li>
+<li>Exit code 128 indicates invalid argument to exit</li>
+<li>Exit codes 129-255 indicate jobs terminated by Linux signals
 <ul>
 <li>For these, subtract 128 from the number and match to signal code</li>
 <li>Enter <code>kill -l</code> to list signal codes</li>
@@ -874,7 +878,7 @@ Memory Efficiency: 6.63% of 70.00 GB</code></pre>
 <p>Check efficiency of previously submitted job</p>
 </div>
 <div id="other-commands" class="slide section level2">
-<h1>5 - Other commands</h1>
+<h1>5 — Other commands</h1>
 </div>
 <div id="scontrol" class="slide section level2">
 <h1>scontrol</h1>
@@ -895,7 +899,7 @@ scontrol hold &lt;jobid&gt;
 scontrol release &lt;jobid&gt;</code></pre>
 </div>
 <div id="job-dependencies" class="slide section level2">
-<h1>6 - Job dependencies</h1>
+<h1>6 — Job dependencies</h1>
 </div>
 <div id="why-use-a-job-dependency" class="slide section level2">
 <h1>Why use a job dependency?</h1>
@@ -940,7 +944,7 @@ $ squeue -u ttrojan
 3353548      main   jl.job  ttrojan  R       0:32      1 b22-31</code></pre>
 </div>
 <div id="job-arrays" class="slide section level2">
-<h1>7 - Job arrays</h1>
+<h1>7 — Job arrays</h1>
 </div>
 <div id="why-use-a-job-array" class="slide section level2">
 <h1>Why use a job array?</h1>
