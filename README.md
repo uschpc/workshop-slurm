@@ -15,3 +15,5 @@ Slides: https://uschpc.github.io/workshop-slurm/
 Video learning:
 
 [Submitting jobs](https://carc.usc.edu/education-and-outreach/video-learning/submitting-jobs)
+
+[Additional Slurm considerations](https://github.com/uschpc/workshop-slurm/blob/main/Slurm%20Fun.pptx.pdf)
