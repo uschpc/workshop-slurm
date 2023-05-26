@@ -16,13 +16,9 @@ Learning objectives:
 
 ### Additional resources
 
-[Official Slurm documentation](https://slurm.schedmd.com/)  
-[Slurm Quick Start User Guide](https://slurm.schedmd.com/quickstart.html)  
-[Slurm tutorials](https://slurm.schedmd.com/tutorials.html)  
-[Slurm cheatsheet](https://slurm.schedmd.com/pdfs/summary.pdf)  
-[CARC User Guide for Running Jobs](https://carc.usc.edu/user-information/user-guides/hpc-basics/running-jobs)  
-[CARC Slurm Job Script Templates](https://carc.usc.edu/user-information/user-guides/hpc-basics/slurm-templates)  
-
-Video learning:
-
-[Submitting jobs](https://carc.usc.edu/education-and-outreach/video-learning/submitting-jobs)
+- [Slurm documentation](https://slurm.schedmd.com/)
+- [Slurm cheatsheet](https://slurm.schedmd.com/pdfs/summary.pdf)
+- [Running jobs on CARC clusters](https://carc.usc.edu/user-information/user-guides/hpc-basics/running-jobs)
+- [CARC Slurm job script templates](https://carc.usc.edu/user-information/user-guides/hpc-basics/slurm-templates)
+- [CARC Slurm cheatsheet](https://www.carc.usc.edu/user-information/user-guides/hpc-basics/slurm-cheatsheet)
+- [CARC Slurm tools](https://github.com/uschpc/slurm-tools)
