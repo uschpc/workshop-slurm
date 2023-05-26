@@ -15,18 +15,18 @@ class: left, top, title-slide
 
 ### Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2021-10-22
+### Last updated on 2023-05-26
 
 ---
 
 ## Outline
 
-1. What is Slurm? 
-2. Cluster info  
-3. Submitting jobs  
-4. Monitoring jobs  
-5. Other commands  
-6. Job dependencies  
+1. What is Slurm?
+2. Cluster info
+3. Submitting jobs
+4. Monitoring jobs
+5. Other commands
+6. Job dependencies
 7. Job arrays
 
 ---
@@ -37,7 +37,8 @@ class: left, top, title-slide
 - **login (head) node** &mdash; special node for accessing cluster and submitting jobs
 - **cluster** &mdash; set of interconnected compute nodes
 - **partition** &mdash; distinct group of compute nodes within a cluster
-- **shell** &mdash; program for running commands (read-evaluate-print loop)
+- **terminal** &mdash; program for running shells
+- **shell** &mdash; program for running commands
 - **script** &mdash; text file with a sequence of commands to execute
 - **job** &mdash; distinct set of computational work to be performed
 - **scheduler** &mdash; program that controls when and where jobs are run on a cluster
@@ -69,18 +70,23 @@ class: left, top, title-slide
 |                 | scancel  | Cancel pending or running jobs |
 | Monitoring jobs | sstat    | Display status information for running jobs |
 |                 | sacct    | Display accounting information for jobs |
-|                 | seff     | Display job efficiency information for past jobs |
+|                 | sreport  | Generate reports from job accounting data |
 | Other           | scontrol | Display or modify Slurm configuration and state |
 
 ---
 
-## Custom Slurm commands
+## Custom CARC Slurm commands
 
 | Command | Purpose |
 |---|---|
-| myqueue | Your job queue in a better format |
-| jobhist | Compact job history |
-| jobinfo | Detailed job information |
+| myaccount | View own account information |
+| acctusage | View account usage information |
+| nodeinfo | View partition and node states |
+| gpuinfo | View GPU states |
+| cqueue | View jobs in scheduling queue |
+| myqueue | View own jobs in scheduling queue |
+| jobhist | View compact history of own jobs |
+| jobinfo | View detailed information about jobs |
 
 ---
 
@@ -106,9 +112,9 @@ class: left, top, title-slide
 | main       | Serial and small-to-medium parallel jobs (single node or multiple nodes) |
 | epyc-64    | Medium-to-large parallel jobs (single node or multiple nodes) |
 | gpu        | Jobs requiring GPU nodes |
-| oneweek    | Long-running jobs (up to 7 days) |
 | largemem   | Jobs requiring larger amounts of memory (up to 1 TB) |
-| debug      | Short-running jobs for debugging purposes |
+| debug      | Short-running jobs for testing or debugging purposes (up to 1 hour) |
+| oneweek    | Long-running jobs (up to 7 days) |
 
 ---
 
@@ -116,7 +122,7 @@ class: left, top, title-slide
 
 - Display compute partition and node information
 - Default output lists information by partition and node status
-- `sinfo2` is alias for listing information by partition, node type, and node status
+- `nodeinfo` lists information by partition, node type, and node status
 - `sinfo --help`
 - [https://slurm.schedmd.com/sinfo.html](https://slurm.schedmd.com/sinfo.html)
 
@@ -125,9 +131,9 @@ $ sinfo
 
 $ sinfo -lNp debug
 
-$ sinfo --states=idle
+$ nodeinfo
 
-$ sinfo2
+$ nodeinfo -s idle
 ```
 
 ---
@@ -158,6 +164,8 @@ $ sinfo2
   - The node has some of its CPUs ALLOCATED while others are IDLE
 - reserved
   - The node is in an advanced reservation and not generally available
+- planned
+  - The node is planned for a job
 
 ---
 
@@ -198,26 +206,50 @@ $ sbatch my.job
 
 ---
 
-## Example job script for multi-threaded job
+## Generic structure of a job script
 
-- Generic structure
-  1. Specify SBATCH options (resource requests)
-  2. Load software and set up environment
-  3. Run commands
+1. Specify SBATCH options (resource requests)
+2. Load software and set up environment
+3. Run command(s)
+
+---
+
+## Example job script for single-threaded job
 
 ```bash
 #!/bin/bash
 
+#SBATCH --account=<project_id>
+#SBATCH --partition=main
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=8G
+#SBATCH --time=2:00:00
+
+module purge
+module load julia/1.9.0
+
+julia script.jl
+```
+
+---
+
+## Example job script for multi-threaded job
+
+```bash
+#!/bin/bash
+
+#SBATCH --account=<project_id>
+#SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
-#SBATCH --mem=32GB
+#SBATCH --mem=32G
 #SBATCH --time=2:00:00
-#SBATCH --account=<project_id>
 
 module purge
-module load gcc/8.3.0
-module load julia/1.6.1
+module load julia/1.9.0
 
 julia --threads 16 script.jl
 ```
@@ -232,7 +264,7 @@ julia --threads 16 script.jl
 | `--ntasks=<number>`            | Number of processes to run | 1 |
 | `--cpus-per-task=<number>`     | Number of CPUs/cores per task | 1 |
 | `--mem=<number>`               | Memory per node | n/a |
-| `--mem-per-cpu=<number>`       | Memory per CPU/core | 2GB |
+| `--mem-per-cpu=<number>`       | Memory per CPU/core | 2G |
 | `--time=<D-HH:MM:SS>`          | Maximum run time | 1:00:00 |
 | `--partition=<partition_name>` | Request nodes on specified partition | main |
 | `--constraint=<attribute>`     | Node property to request (e.g., `xeon-4116`) | n/a |
@@ -254,24 +286,23 @@ julia --threads 16 script.jl
 
 ## Example job script for GPU job
 
-- Add option: `#SBATCH --gres=gpu:<gpu_type>:<number>`
-- [CARC User Guide for Using GPUs](https://carc.usc.edu/user-information/user-guides/software-and-programming/using-gpus)
+- Add option: `#SBATCH --gpus-per-task=<gpu_type>:<number>`
+- [Using GPUs on CARC clusters](https://carc.usc.edu/user-information/user-guides/software-and-programming/using-gpus)
 
 ```bash
 #!/bin/bash
 
-#SBATCH --gres=gpu:p100:1
+#SBATCH --account=<project_id>
+#SBATCH --partition=gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=16GB
+#SBATCH --gpus-per-task=a100:1
+#SBATCH --mem=16G
 #SBATCH --time=1:00:00
-#SBATCH --partition=gpu
-#SBATCH --account=<project_id>
 
 module purge
-module load gcc/8.3.0
-module load cuda/10.1.243
+module load nvhpc/22.11
 
 ./cuda_program
 ```
@@ -289,18 +320,18 @@ module load cuda/10.1.243
 
 ## Job limits on Discovery
 
-| Partition | Maximum run time | Maximum concurrent CPUs | Maximum concurrent GPUs | Maximum number of jobs queued | Maximum number of jobs running |
-|---|---|---|---|---|---|
-| main     |  48 hours   | 1,200 | 36  | 5,000 | 500 |
-| epyc-64  |  48 hours   | 1,200 | n/a | 5,000 | 500 |
-| gpu      |  48 hours   | 1,200 | 36  | 5,000 | 500 |
-| oneweek  | 168 hours   | 208   | n/a | 50    | 50  |
-| largemem | 168 hours   | 376   | n/a | 10    | 1   |
-| debug    |   1 hour    | 48    | 6   | 5     | 5   |
+| Partition | Maximum run time | Maximum concurrent CPUs | Maximum concurrent GPUs | Maximum concurrent memory | Maximum number of jobs queued | Maximum number of jobs running |
+|---|---|---|---|---|---|---|
+| main     |  48 hours   | 2,000 | 36  | n/a  | 5,000 | 500 |
+| epyc-64  |  48 hours   | 2,000 | n/a | n/a  | 5,000 | 500 |
+| gpu      |  48 hours   | 2,000 | 36  | n/a  | 5,000 | 500 |
+| largemem | 168 hours   | 64    | n/a | 1 TB | 10    | 3   |
+| debug    |   1 hour    | 48    | 4   | n/a  | 5     | 5   |
+| oneweek  | 168 hours   | 208   | n/a | n/a  | 50    | 50  |
 
-*By default, Endeavour condo partitions will inherit the main partition limits*  
-*But with a two-week maximum run time*  
-*Custom limits can be requested for Endeavour condo partitions*
+- *By default, Endeavour condo partitions will inherit the main partition limits*
+- *But with a two-week maximum run time*
+- *Custom limits can be requested for Endeavour condo partitions*
 
 ---
 
@@ -326,16 +357,16 @@ module load cuda/10.1.243
 ```bash
 #!/bin/bash
 
+#SBATCH --account=<project_id>
+#SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32GB
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=32G
 #SBATCH --time=2:00:00
-#SBATCH --account=<project_id>
 
 module purge
-module load gcc/8.3.0
-module load julia/1.6.1
+module load julia/1.9.0
 
 cd $SLURM_SUBMIT_DIR/scripts
 
@@ -350,7 +381,7 @@ julia --threads $SLURM_CPUS_PER_TASK script.jl
 - Can also be used for job packing
 - `srun --help`
 - [https://slurm.schedmd.com/srun.html](https://slurm.schedmd.com/srun.html)
-- [CARC User Guide for Using MPI](https://carc.usc.edu/user-information/user-guides/software-and-programming/mpi)
+- [Using MPI on CARC clusters](https://carc.usc.edu/user-information/user-guides/software-and-programming/mpi)
 
 ---
 
@@ -359,18 +390,17 @@ julia --threads $SLURM_CPUS_PER_TASK script.jl
 ```bash
 #!/bin/bash
 
+#SBATCH --account=<project_id>
+#SBATCH --partition=epyc-64
 #SBATCH --nodes=3
-#SBATCH --ntasks=192
+#SBATCH --ntasks-per-node=64
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=0
 #SBATCH --time=24:00:00
-#SBATCH --partition=epyc-64
-#SBATCH --account=<project_id>
 
 module purge
-module load gcc/8.3.0
-module load openmpi/4.0.2
-module load pmix/3.1.3
+module load gcc/11.3.0
+module load openmpi/4.1.4
 
 ulimit -s unlimited
 
@@ -384,16 +414,16 @@ srun --mpi=pmix_v2 -n $SLURM_NTASKS ./mpi_program
 ```bash
 #!/bin/bash
 
+#SBATCH --account=<project_id>
+#SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=16GB
+#SBATCH --mem=16G
 #SBATCH --time=1:00:00
-#SBATCH --account=<project_id>
 
 module purge
-module load gcc/8.3.0
-module load julia/1.6.1
+module load julia/1.9.0
 
 srun --ntasks=1 --exclusive julia script1.jl &
 srun --ntasks=1 --exclusive julia script2.jl &
@@ -416,7 +446,7 @@ wait
 
 - Display status of jobs and job steps
 - Completed jobs will not show up in `squeue`; use `jobhist` instead
-- Use `myqueue` for different format
+- Use `myqueue` or `cqueue` for better output formats
 - `squeue --help`
 - [https://slurm.schedmd.com/squeue.html](https://slurm.schedmd.com/squeue.html)
 
@@ -427,7 +457,7 @@ $ squeue --me
 
 $ myqueue
 
-$ squeue --partition=epyc-64
+$ cqueue -p epyc-64
 ```
 
 ---
@@ -499,7 +529,11 @@ $ squeue --partition=epyc-64
 - [https://slurm.schedmd.com/sprio.html](https://slurm.schedmd.com/sprio.html)
 
 ```bash
-$ sprio -n -j <job_id>
+$ sprio -nj <job_id>
+
+$ sprio -nu $USER
+
+$ sprio -nlp gpu
 ```
 
 ---
@@ -513,7 +547,7 @@ $ sprio -n -j <job_id>
 ```bash
 $ scancel <job_id>
 
-$ scancel -u <username>
+$ scancel -u $USER
 ```
 
 ---
@@ -522,7 +556,6 @@ $ scancel -u <username>
 
 - `sstat` &mdash; view job status for currently running job
 - `sacct` &mdash; view information about current or past jobs
-- `seff` &mdash; view efficiency information about past jobs
 - `jobhist` &mdash; view compact history of jobs
 - `jobinfo` &mdash; view detailed job information
 
@@ -587,21 +620,11 @@ $ sacct --format=JobID,MaxRSS,AveCPUFreq,MaxDiskRead,MaxDiskWrite,State,ExitCode
 
 ---
 
-## seff
-
-- Display job efficiency information for past jobs (CPU and memory use)
-- Use to optimize resource requests
-
-```bash
-$ seff <job_id>
-```
-
----
-
 ## jobhist and jobinfo
 
 - Convenience commands with better output formats
-- Alternatives to `sstat`, `sacct`, and `seff`
+- Alternatives to `sstat` and `sacct`
+- `jobinfo` provides CPU and memory efficiency
 
 ```bash
 $ jobhist <days>
@@ -611,9 +634,27 @@ $ jobinfo <job_id>
 
 ---
 
+## sreport
+
+- Generate reports from job accounting data
+- `sreport --help`
+- `acctusage` is a convenience command for reporting account usage
+- [https://slurm.schedmd.com/sreport.html](https://slurm.schedmd.com/sreport.html)
+
+```bash
+$ sreport cluster accountutilizationbyuser start=2023-04-01 end=2023-04-30 users=$USER
+
+$ sreport user topusage start=2023-04-01 end=2023-04-30 accounts=<project_id>
+
+$ acctusage
+```
+
+---
+
 ## scontrol
 
 - Display or modify Slurm configuration and state
+- `scontrol --help`
 - Mostly for admins, some commands for users
 - [https://slurm.schedmd.com/scontrol.html](https://slurm.schedmd.com/scontrol.html)
 
@@ -706,18 +747,19 @@ $ squeue --me
 ```bash
 #!/bin/bash
 
+#SBATCH --account=<project_id>
+#SBATCH --partition=main
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=16GB
+#SBATCH --mem=16G
 #SBATCH --time=2:00:00
 #SBATCH --array=1-3
-#SBATCH --account=<project_id>
 
 module purge
-module load gcc/8.3.0
-module load openblas/0.3.8
-module load r/4.0.0
+module load gcc/11.3.0
+module load openblas/0.3.20
+module load r/4.3.0
 
 echo "Task ID: $SLURM_ARRAY_TASK_ID"
 
@@ -764,23 +806,21 @@ $ squeue --me
 
 ## Additional resources
 
-- [Official Slurm documentation](https://slurm.schedmd.com/)
-- [Slurm Quick Start User Guide](https://slurm.schedmd.com/quickstart.html)
-- [Slurm tutorials](https://slurm.schedmd.com/tutorials.html)
+- [Slurm documentation](https://slurm.schedmd.com/)
 - [Slurm cheatsheet](https://slurm.schedmd.com/pdfs/summary.pdf)
-- [CARC User Guide for Running Jobs](https://carc.usc.edu/user-information/user-guides/hpc-basics/running-jobs)
-- [CARC Slurm Job Script Templates](https://carc.usc.edu/user-information/user-guides/hpc-basics/slurm-templates)
-- Video learning: [Submitting jobs](https://carc.usc.edu/education-and-outreach/video-learning/submitting-jobs)
+- [Running jobs on CARC clusters](https://carc.usc.edu/user-information/user-guides/hpc-basics/running-jobs)
+- [CARC Slurm job script templates](https://carc.usc.edu/user-information/user-guides/hpc-basics/slurm-templates)
+- [CARC Slurm cheatsheet](https://www.carc.usc.edu/user-information/user-guides/hpc-basics/slurm-cheatsheet)
+- [CARC Slurm tools](https://github.com/uschpc/slurm-tools)
 
 ---
 
 ## CARC support
 
 - [Submit a support ticket](https://carc.usc.edu/user-information/ticket-submission)
-- [User Forum](https://hpc-discourse.usc.edu/)
 - Office Hours
   - Every Tuesday 2:30-5pm
-  - Register [here](https://carc.usc.edu/news-and-events/events)
+  - Find Zoom link [here](https://www.carc.usc.edu/education-and-resources/office-hours)
 
 ---
 
