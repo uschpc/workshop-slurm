@@ -9,13 +9,15 @@
   <body>
     <textarea id="source">
 
-class: left, top, title-slide
+class: center, top, title-slide
 
 # Slurm Job Management
 
+<img src="slurm-logo.png" height="200" />
+
 ### Center for Advanced Research Computing <br> University of Southern California <br>
 
-### Last updated on 2023-05-26
+#### Last updated on 2024-06-20
 
 ---
 
@@ -52,7 +54,7 @@ class: left, top, title-slide
   1. Allocates access to resources (compute nodes)
   2. Provides a framework to run and monitor jobs on allocated nodes
   3. Manages a job queue for competing resource requests
-- Unique configuration for CARC clusters
+- Configuration may differ across clusters
 - [Official docs](https://slurm.schedmd.com)
 
 ---
@@ -79,14 +81,13 @@ class: left, top, title-slide
 
 | Command | Purpose |
 |---|---|
-| myaccount | View own account information |
-| acctusage | View account usage information |
-| nodeinfo | View partition and node states |
-| gpuinfo | View GPU states |
-| cqueue | View jobs in scheduling queue |
-| myqueue | View own jobs in scheduling queue |
-| jobhist | View compact history of own jobs |
-| jobinfo | View detailed information about jobs |
+| myaccount | View account information for user |
+| nodeinfo | View node information by partition, CPU/GPU models, and state |
+| noderes | View available resources on nodes |
+| jobqueue | View job queue information |
+| myqueue | View job queue information for user |
+| jobhist | View compact history of jobs |
+| jobinfo | View detailed job information |
 
 ---
 
@@ -171,9 +172,9 @@ $ nodeinfo -s idle
 
 ## Submitting jobs
 
-- `salloc` &mdash; for interactive jobs
-- `sbatch` &mdash; for batch jobs
-- `srun` &mdash; for parallel (MPI) tasks (job steps) within batch jobs
+- `salloc` &mdash; request an interactive job
+- `sbatch` &mdash; submit a batch job
+- `srun` &mdash; run parallel (MPI) tasks (job steps) within batch jobs
 
 ---
 
@@ -189,6 +190,8 @@ $ nodeinfo -s idle
 $ salloc
 
 $ salloc --partition=debug --cpus-per-task=8
+
+$ salloc -p debug -c 8
 ```
 
 ---
@@ -201,7 +204,11 @@ $ salloc --partition=debug --cpus-per-task=8
 - [https://slurm.schedmd.com/sbatch.html](https://slurm.schedmd.com/sbatch.html)
 
 ```bash
-$ sbatch my.job
+$ sbatch julia.job
+
+$ sbatch julia.slurm
+
+$ sbatch -p debug julia.job
 ```
 
 ---
@@ -225,10 +232,10 @@ $ sbatch my.job
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=8G
-#SBATCH --time=2:00:00
+#SBATCH --time=1:00:00
 
 module purge
-module load julia/1.9.0
+module load julia/1.10.3
 
 julia script.jl
 ```
@@ -246,10 +253,10 @@ julia script.jl
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=32G
-#SBATCH --time=2:00:00
+#SBATCH --time=1:00:00
 
 module purge
-module load julia/1.9.0
+module load julia/1.10.3
 
 julia --threads 16 script.jl
 ```
@@ -262,9 +269,9 @@ julia --threads 16 script.jl
 |---|---|---|
 | `--nodes=<number>`             | Number of nodes to use | 1 |
 | `--ntasks=<number>`            | Number of processes to run | 1 |
-| `--cpus-per-task=<number>`     | Number of CPUs/cores per task | 1 |
+| `--cpus-per-task=<number>`     | Number of CPUs (cores) per task | 1 |
 | `--mem=<number>`               | Memory per node | n/a |
-| `--mem-per-cpu=<number>`       | Memory per CPU/core | 2G |
+| `--mem-per-cpu=<number>`       | Memory per CPU (core) | 2G |
 | `--time=<D-HH:MM:SS>`          | Maximum run time | 1:00:00 |
 | `--partition=<partition_name>` | Request nodes on specified partition | main |
 | `--constraint=<attribute>`     | Node property to request (e.g., `xeon-4116`) | n/a |
@@ -286,7 +293,7 @@ julia --threads 16 script.jl
 
 ## Example job script for GPU job
 
-- Add option: `#SBATCH --gpus-per-task=<gpu_type>:<number>`
+- Request gpu partition and one or more GPUs (model is optional)
 - [Using GPUs on CARC clusters](https://carc.usc.edu/user-information/user-guides/software-and-programming/using-gpus)
 
 ```bash
@@ -296,13 +303,13 @@ julia --threads 16 script.jl
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --gpus-per-task=a100:1
 #SBATCH --mem=16G
 #SBATCH --time=1:00:00
 
 module purge
-module load nvhpc/22.11
+module load nvhpc/23.11
 
 ./cuda_program
 ```
@@ -322,9 +329,9 @@ module load nvhpc/22.11
 
 | Partition | Maximum run time | Maximum concurrent CPUs | Maximum concurrent GPUs | Maximum concurrent memory | Maximum number of jobs queued | Maximum number of jobs running |
 |---|---|---|---|---|---|---|
-| main     |  48 hours   | 2,000 | 36  | n/a  | 5,000 | 500 |
-| epyc-64  |  48 hours   | 2,000 | n/a | n/a  | 5,000 | 500 |
-| gpu      |  48 hours   | 2,000 | 36  | n/a  | 5,000 | 500 |
+| main     |  48 hours   | 2,000 | 36  | n/a  | 5,000 | 100 |
+| epyc-64  |  48 hours   | 2,000 | n/a | n/a  | 5,000 | 100 |
+| gpu      |  48 hours   | 400   | 36  | n/a  | 100   | 36  |
 | largemem | 168 hours   | 64    | n/a | 1 TB | 10    | 3   |
 | debug    |   1 hour    | 48    | 4   | n/a  | 5     | 5   |
 | oneweek  | 168 hours   | 208   | n/a | n/a  | 50    | 50  |
@@ -352,7 +359,7 @@ module load nvhpc/22.11
 
 ---
 
-## Example job script with Slurm variables
+## Example job script using Slurm variables
 
 ```bash
 #!/bin/bash
@@ -363,10 +370,10 @@ module load nvhpc/22.11
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=32G
-#SBATCH --time=2:00:00
+#SBATCH --time=1:00:00
 
 module purge
-module load julia/1.9.0
+module load julia/1.10.3
 
 cd $SLURM_SUBMIT_DIR/scripts
 
@@ -392,11 +399,11 @@ julia --threads $SLURM_CPUS_PER_TASK script.jl
 
 #SBATCH --account=<project_id>
 #SBATCH --partition=epyc-64
-#SBATCH --nodes=3
+#SBATCH --nodes=4
 #SBATCH --ntasks-per-node=64
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=0
-#SBATCH --time=24:00:00
+#SBATCH --time=1:00:00
 
 module purge
 module load gcc/11.3.0
@@ -423,7 +430,7 @@ srun --mpi=pmix_v2 -n $SLURM_NTASKS ./mpi_program
 #SBATCH --time=1:00:00
 
 module purge
-module load julia/1.9.0
+module load julia/1.10.3
 
 srun --ntasks=1 --exclusive julia script1.jl &
 srun --ntasks=1 --exclusive julia script2.jl &
@@ -436,7 +443,7 @@ wait
 
 ## Additional commands related to job submission
 
-- `squeue` &mdash; see the job queue
+- `squeue` &mdash; view the job queue
 - `sprio` &mdash; check job priority
 - `scancel` &mdash; cancel jobs
 
@@ -446,7 +453,7 @@ wait
 
 - Display status of jobs and job steps
 - Completed jobs will not show up in `squeue`; use `jobhist` instead
-- Use `myqueue` or `cqueue` for better output formats
+- Use `myqueue` or `jobqueue` for better output formats
 - `squeue --help`
 - [https://slurm.schedmd.com/squeue.html](https://slurm.schedmd.com/squeue.html)
 
@@ -457,7 +464,7 @@ $ squeue --me
 
 $ myqueue
 
-$ cqueue -p epyc-64
+$ jobqueue -p epyc-64
 ```
 
 ---
@@ -477,7 +484,7 @@ $ cqueue -p epyc-64
 
 ---
 
-## Common codes for pending reason
+## Common codes for PD / PENDING reason
 
 - Resources
   - The job is waiting for resources to become available
@@ -485,10 +492,12 @@ $ cqueue -p epyc-64
   - One or more higher priority jobs exist for this partition or advanced reservation
 - ReqNodeNotAvail
   - Some node specifically required by the job is not currently available
+- QOSMaxJobsPerUserLimit
+  - The job has reached the maximum jobs per user limit
 - QOSMaxCpuPerUserLimit
   - The job has reached the maximum CPU per user limit
-- QOSMaxGRESPerUser
-  - The job has reached the maximum GPU per user limit
+- QOSMaxGRESPerUserLimit
+  - The job has reached the maximum GRES (e.g, GPU) per user limit
 - AssocGrpCPUMinutesLimit
   - The project account has run out of CPU time
 - InvalidAccount
@@ -638,15 +647,12 @@ $ jobinfo <job_id>
 
 - Generate reports from job accounting data
 - `sreport --help`
-- `acctusage` is a convenience command for reporting account usage
 - [https://slurm.schedmd.com/sreport.html](https://slurm.schedmd.com/sreport.html)
 
 ```bash
 $ sreport cluster accountutilizationbyuser start=2023-04-01 end=2023-04-30 users=$USER
 
 $ sreport user topusage start=2023-04-01 end=2023-04-30 accounts=<project_id>
-
-$ acctusage
 ```
 
 ---
@@ -738,7 +744,7 @@ $ squeue --me
   - Modify job or application script to use array index
   - Multiple implementation methods exist
 - [https://slurm.schedmd.com/job_array.html](https://slurm.schedmd.com/job_array.html)
-- For lots of short-running jobs, use [Launcher](https://carc.usc.edu/user-information/user-guides/software-and-programming/launcher)
+- For lots of short-running jobs, pack them in a single Slurm job using [HyperQueue](https://it4innovations.github.io/hyperqueue/stable/)
 
 ---
 
@@ -753,13 +759,13 @@ $ squeue --me
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=16G
-#SBATCH --time=2:00:00
+#SBATCH --time=1:00:00
 #SBATCH --array=1-3
 
 module purge
 module load gcc/11.3.0
 module load openblas/0.3.20
-module load r/4.3.0
+module load r/4.4.0
 
 echo "Task ID: $SLURM_ARRAY_TASK_ID"
 
@@ -826,9 +832,9 @@ $ squeue --me
 
 ## Exercises
 
-1. Display node info for the largemem partition
+1. View configured resources for nodes on the largemem partition
 2. Request an interactive job on the debug partition
-3. Submit a serial "Hello world" job to the debug partition
+3. Submit a "Hello world" job to the debug partition
 4. Check efficiency of completed jobs
 
     </textarea>
